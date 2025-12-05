@@ -2,9 +2,9 @@
 
 Custom add-ons for [Free Download Manager 6](https://www.freedownloadmanager.org/).
 
-## Croxz Universal Downloader
+## Built-in graphical interface for yt-dlp
 
-Download media from YouTube, Twitter, Instagram, and 50+ sites using yt-dlp.
+Provided YouTube link (video, music, playlist) can be downloaded easily with best presets. 
 
 **[Download fdm-croxz.fda](fdm-croxz.fda)** | [Source](fdm-croxz/)
 
@@ -16,7 +16,7 @@ Download media from YouTube, Twitter, Instagram, and 50+ sites using yt-dlp.
 
 ### Requirements
 
-- yt-dlp installed and in PATH
+- yt-dlp MUST be installed and in PATH (be sure updated)
 - Python 3.8+
 
 ## Documentation
