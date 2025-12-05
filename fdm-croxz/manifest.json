@@ -1,0 +1,31 @@
+{
+  "uuid": "fdm-croxz",
+  "author": "Bugra",
+  "name": "Croxz Universal Downloader",
+  "description": "Universal downloader for media, archives, executables, and any file type. Powered by yt-dlp for media extraction with fallback to direct download. Supports 50+ media sites and all common file types.",
+  "version": "1.2.0",
+  "icon": "icon.svg",
+  "mediaParser": true,
+  "mediaListParser": true,
+  "scripts": [
+    "msparser.js",
+    "msbatchparser.js"
+  ],
+  "dependencies": {
+    "Python": {"minVersion": "3.8"}
+  },
+  "permissions": [
+    "launchPython"
+  ],
+  "allowedPaths": [
+    "%LOCALAPPDATA%\\yt-dlp",
+    "%APPDATA%\\yt-dlp",
+    "%LOCALAPPDATA%\\croxz",
+    "~/.config/yt-dlp",
+    "~/.config/croxz"
+  ],
+  "minApiVersion": 6,
+  "minFeaturesLevel": 1,
+  "targetApiVersion": 9
+}
+
