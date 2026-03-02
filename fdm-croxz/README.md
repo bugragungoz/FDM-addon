@@ -8,6 +8,7 @@ A Free Download Manager 6 add-on for downloading media from YouTube, Twitter, In
 - Quality selection (4K, 1080p, 720p, etc.)
 - Audio-only option for music downloads
 - File size displayed for each quality option
+- HLS/m3u8 stream support
 
 ## Requirements
 

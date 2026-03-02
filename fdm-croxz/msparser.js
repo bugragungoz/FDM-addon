@@ -12,7 +12,7 @@ var msParser = (function() {
     var DOCUMENT_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "epub", "mobi", "djvu"];
     var IMAGE_EXT = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "ico", "tiff", "psd", "raw", "heic"];
     var AUDIO_EXT = ["mp3", "m4a", "wav", "flac", "ogg", "aac", "wma", "opus", "alac", "aiff"];
-    var VIDEO_EXT = ["mp4", "mkv", "webm", "avi", "mov", "wmv", "flv", "m4v", "ts", "m2ts", "vob", "3gp"];
+    var VIDEO_EXT = ["mp4", "mkv", "webm", "avi", "mov", "wmv", "flv", "m4v", "ts", "m2ts", "vob", "3gp", "m3u8", "m3u"];
     var FONT_EXT = ["ttf", "otf", "woff", "woff2", "eot"];
     var CODE_EXT = ["js", "py", "java", "cpp", "c", "cs", "php", "rb", "go", "rs", "swift", "kt"];
     var DATA_EXT = ["json", "xml", "yaml", "yml", "sql", "db", "sqlite", "csv", "tsv"];
@@ -167,9 +167,19 @@ var msParser = (function() {
         }
     }
     
+    // Stream formats that should be processed by yt-dlp, not direct download
+    var STREAM_EXT = ["m3u8", "m3u", "mpd"];
+    
+    function isStreamUrl(url) {
+        var ext = getExtensionFromUrl(url);
+        return ext && STREAM_EXT.indexOf(ext) !== -1;
+    }
+    
     function isDirectDownloadUrl(url) {
         var ext = getExtensionFromUrl(url);
         if (!ext) return false;
+        // Stream formats should NOT be treated as direct downloads
+        if (STREAM_EXT.indexOf(ext) !== -1) return false;
         return ALL_DIRECT_EXT.indexOf(ext) !== -1;
     }
     
@@ -321,7 +331,12 @@ var msParser = (function() {
                 return false;
             }
             
-            // Only support known media sites for yt-dlp extraction
+            // Support stream URLs (m3u8, mpd) - these need yt-dlp processing
+            if (isStreamUrl(url)) {
+                return true;
+            }
+            
+            // Support known media sites for yt-dlp extraction
             if (isMediaSite(url)) {
                 return true;
             }
@@ -345,11 +360,21 @@ var msParser = (function() {
                 return false;
             }
             
+            // Support stream URLs (m3u8, mpd) - these need yt-dlp processing
+            if (isStreamUrl(obj.url)) {
+                return true;
+            }
+            
             var contentType = obj.contentType || "";
             
             // Skip binary/archive content - let FDM handle natively
             if (/application\/(octet-stream|x-|zip|rar|pdf|x-msdownload|x-executable)/i.test(contentType)) {
                 return false;
+            }
+            
+            // Intercept HLS/DASH stream content types
+            if (/application\/(vnd\.apple\.mpegurl|x-mpegurl|dash\+xml)/i.test(contentType)) {
+                return true;
             }
             
             // Only intercept video/audio content types

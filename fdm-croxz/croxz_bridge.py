@@ -132,7 +132,11 @@ AUDIO_EXTENSIONS = {
 }
 
 VIDEO_EXTENSIONS = {
-    "mp4", "mkv", "webm", "avi", "mov", "wmv", "flv", "m4v", "mpeg", "mpg", "3gp", "ts", "m2ts", "vob"
+    "mp4", "mkv", "webm", "avi", "mov", "wmv", "flv", "m4v", "mpeg", "mpg", "3gp", "m2ts", "vob"
+}
+
+STREAM_EXTENSIONS = {
+    "m3u8", "m3u", "mpd", "ts"
 }
 
 FONT_EXTENSIONS = {
@@ -198,10 +202,21 @@ def get_extension_from_url(url: str) -> Optional[str]:
     return None
 
 
-def is_direct_download_url(url: str) -> bool:
-    """Check if URL points to a direct downloadable file"""
+def is_stream_url(url: str) -> bool:
+    """Check if URL is a streaming format (m3u8, mpd, ts) that needs yt-dlp"""
     ext = get_extension_from_url(url)
-    return ext is not None and ext in ALL_DIRECT_EXTENSIONS
+    return ext is not None and ext in STREAM_EXTENSIONS
+
+
+def is_direct_download_url(url: str) -> bool:
+    """Check if URL points to a direct downloadable file (not streams)"""
+    ext = get_extension_from_url(url)
+    if ext is None:
+        return False
+    # Stream formats should be processed by yt-dlp, not direct download
+    if ext in STREAM_EXTENSIONS:
+        return False
+    return ext in ALL_DIRECT_EXTENSIONS
 
 
 def find_ytdlp() -> Optional[str]:
@@ -297,6 +312,13 @@ def extract_with_ytdlp(url: str, playlist: bool = False) -> Dict[str, Any]:
         "--ignore-errors",
         "--no-check-certificates",
     ]
+    
+    # For YouTube, request HLS formats which have combined video+audio
+    # This gives us better quality options with embedded audio
+    if "youtube.com" in url or "youtu.be" in url:
+        cmd.extend([
+            "--extractor-args", "youtube:player_client=ios,web",
+        ])
     
     if playlist:
         cmd.extend(["--flat-playlist", "--yes-playlist"])
@@ -428,12 +450,11 @@ def get_format_quality_score(fmt: Dict[str, Any]) -> int:
 
 def merge_video_audio_formats(formats: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Create merged video+audio format entries for FDM.
-    FDM doesn't auto-merge, so we prioritize combined formats
-    and create virtual merged entries for separate streams.
+    Filter formats for FDM - ONLY keep truly combined formats (video+audio in same stream).
+    FDM cannot merge separate video and audio streams.
+    Priority: HLS/m3u8 > combined mp4 > audio-only
     """
     combined = []
-    video_only = []
     audio_only = []
     
     for fmt in formats:
@@ -443,92 +464,37 @@ def merge_video_audio_formats(formats: List[Dict[str, Any]]) -> List[Dict[str, A
         # Skip storyboard/mhtml formats
         if fmt.get("ext") == "mhtml" or fmt.get("vcodec") == "images":
             continue
-            
+        
+        # Check if this is a TRULY combined format (has both video AND audio)
         if is_combined_format(fmt):
             combined.append(fmt)
-        elif has_video(fmt):
-            video_only.append(fmt)
-        elif has_audio(fmt):
+        elif has_audio(fmt) and not has_video(fmt):
+            # Audio-only format (for music downloads)
             audio_only.append(fmt)
+        # Skip video-only formats - they won't have audio!
     
+    # Sort combined by quality
+    combined.sort(key=get_format_quality_score, reverse=True)
+    
+    # Deduplicate: keep only best format per resolution
+    seen_resolutions = set()
     result = []
     
-    # Add combined formats first (these work directly)
     for fmt in combined:
-        result.append(fmt)
-    
-    # If we have separate video and audio, find best audio to pair with each video
-    if video_only and audio_only:
-        # Sort audio by bitrate to get best quality
-        audio_only.sort(key=lambda x: x.get("abr") or x.get("tbr") or 0, reverse=True)
-        best_audio = audio_only[0] if audio_only else None
-        
-        if best_audio:
-            for vfmt in video_only:
-                # Create a merged format description
-                merged = vfmt.copy()
-                
-                # Add audio information to the format
-                merged["acodec"] = best_audio.get("acodec", "aac")
-                merged["abr"] = best_audio.get("abr")
-                merged["audio_ext"] = best_audio.get("ext", "m4a")
-                
-                # Mark that this needs audio from separate URL
-                merged["_audio_url"] = best_audio.get("url")
-                merged["_needs_merge"] = True
-                
-                result.append(merged)
-    
-    # If no combined and no video+audio pairs, include video-only as fallback
-    if not result and video_only:
-        for vfmt in video_only:
-            vfmt_copy = vfmt.copy()
-            vfmt_copy["_video_only"] = True
-            result.append(vfmt_copy)
-    
-    # Add audio-only formats at the end (for music downloads)
-    for fmt in audio_only:
-        fmt_copy = fmt.copy()
-        fmt_copy["preference"] = safe_int(fmt_copy.get("preference"), 0) - 50
-        result.append(fmt_copy)
-    
-    # Sort by quality score
-    result.sort(key=get_format_quality_score, reverse=True)
-    
-    # Deduplicate and filter:
-    # - Video formats: MUST have both video AND audio
-    # - Keep only best format per resolution
-    # - Keep only 1 best audio-only format (for music downloads)
-    
-    seen_resolutions = set()
-    video_formats = []
-    best_audio = None
-    
-    for fmt in result:
         height = fmt.get("height") or 0
-        has_v = fmt.get("vcodec") and fmt.get("vcodec") != "none"
-        has_a = fmt.get("acodec") and fmt.get("acodec") != "none"
-        has_audio_ext = fmt.get("audio_ext")
-        
-        if has_v:
-            # VIDEO FORMAT: Must have audio embedded!
-            if has_a or has_audio_ext:
-                key = f"video_{height}"
-                if key not in seen_resolutions:
-                    seen_resolutions.add(key)
-                    video_formats.append(fmt)
-            # Skip video-only formats (no audio = useless for user)
-        else:
-            # AUDIO-ONLY: Keep only the best one
-            if has_a and best_audio is None:
-                best_audio = fmt
+        key = f"video_{height}"
+        if key not in seen_resolutions:
+            seen_resolutions.add(key)
+            result.append(fmt)
     
-    # Combine: all video formats + 1 best audio at the end
-    deduplicated = video_formats
-    if best_audio:
-        deduplicated.append(best_audio)
+    # Add best audio-only format at the end (for music downloads)
+    if audio_only:
+        audio_only.sort(key=lambda x: safe_int(x.get("abr") or x.get("tbr"), 0), reverse=True)
+        best_audio = audio_only[0]
+        best_audio["preference"] = safe_int(best_audio.get("preference"), 0) - 50
+        result.append(best_audio)
     
-    return deduplicated
+    return result
 
 
 def transform_single(data: Dict[str, Any]) -> Dict[str, Any]:
