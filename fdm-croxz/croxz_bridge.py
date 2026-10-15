@@ -26,46 +26,39 @@ def sanitize_filename(title: str, max_length: int = 200) -> str:
     if not title:
         return "download"
     
-    # Unicode normalization and ASCII transliteration
-    # NFD decomposes characters, then we filter to ASCII
-    normalized = unicodedata.normalize('NFKD', title)
+    # Letters NFKD cannot reduce to ASCII, such as the Turkish dotless i, are replaced first;
+    # NFKD then splits accented letters into a base letter and a mark, and the marks are dropped.
+    replacements = {
+        # Turkish
+        '\u011f': 'g', '\u011e': 'G',  # g breve
+        '\u0131': 'i', '\u0130': 'I',  # dotless i, dotted I
+        '\u015f': 's', '\u015e': 'S',  # s cedilla
+        '\u00fc': 'u', '\u00dc': 'U',  # u umlaut
+        '\u00f6': 'o', '\u00d6': 'O',  # o umlaut
+        '\u00e7': 'c', '\u00c7': 'C',  # c cedilla
+        # German
+        '\u00e4': 'ae', '\u00c4': 'Ae',  # a umlaut
+        '\u00df': 'ss',  # eszett
+        # French/Spanish
+        '\u00e9': 'e', '\u00e8': 'e', '\u00ea': 'e', '\u00eb': 'e',
+        '\u00e0': 'a', '\u00e1': 'a', '\u00e2': 'a',
+        '\u00f1': 'n', '\u00d1': 'N',
+        # Common symbols
+        '\u2019': "'", '\u2018': "'",  # smart quotes
+        '\u201c': '"', '\u201d': '"',
+        '\u2013': '-', '\u2014': '-',  # dashes
+        '\u2026': '...',  # ellipsis
+        '\u00a9': '(c)', '\u00ae': '(r)',
+        '\u2122': '(tm)',
+    }
+
+    temp = title
+    for old, new in replacements.items():
+        temp = temp.replace(old, new)
+
+    normalized = unicodedata.normalize('NFKD', temp)
     ascii_text = normalized.encode('ascii', 'ignore').decode('ascii')
-    
-    # If we lost too much, try a simpler approach
-    if len(ascii_text) < len(title) * 0.3:
-        # Replace common unicode characters manually
-        replacements = {
-            # Turkish
-            '\u011f': 'g', '\u011e': 'G',  # g breve
-            '\u0131': 'i', '\u0130': 'I',  # dotless i, dotted I
-            '\u015f': 's', '\u015e': 'S',  # s cedilla
-            '\u00fc': 'u', '\u00dc': 'U',  # u umlaut
-            '\u00f6': 'o', '\u00d6': 'O',  # o umlaut
-            '\u00e7': 'c', '\u00c7': 'C',  # c cedilla
-            # German
-            '\u00e4': 'ae', '\u00c4': 'Ae',  # a umlaut
-            '\u00df': 'ss',  # eszett
-            # French/Spanish
-            '\u00e9': 'e', '\u00e8': 'e', '\u00ea': 'e', '\u00eb': 'e',
-            '\u00e0': 'a', '\u00e1': 'a', '\u00e2': 'a',
-            '\u00f1': 'n', '\u00d1': 'N',
-            # Common symbols
-            '\u2019': "'", '\u2018': "'",  # smart quotes
-            '\u201c': '"', '\u201d': '"',
-            '\u2013': '-', '\u2014': '-',  # dashes
-            '\u2026': '...',  # ellipsis
-            '\u00a9': '(c)', '\u00ae': '(r)',
-            '\u2122': '(tm)',
-        }
-        
-        temp = title
-        for old, new in replacements.items():
-            temp = temp.replace(old, new)
-        
-        # Try again with replacements
-        normalized = unicodedata.normalize('NFKD', temp)
-        ascii_text = normalized.encode('ascii', 'ignore').decode('ascii')
-    
+
     # Remove or replace invalid filename characters
     # Windows invalid: \ / : * ? " < > |
     # Also remove control characters

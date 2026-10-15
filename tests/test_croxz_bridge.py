@@ -39,6 +39,11 @@ class SanitizeFilenameTests(unittest.TestCase):
         self.assertEqual(bridge.sanitize_filename(""), "download")
         self.assertEqual(bridge.sanitize_filename("???"), "download")
 
+    def test_keeps_turkish_letters_as_their_ascii_base(self):
+        self.assertEqual(bridge.sanitize_filename("Kırmızı Şarkı"), "Kirmizi_Sarki")
+        self.assertEqual(bridge.sanitize_filename("Ağır Çekim Ölüm Düşüş"), "Agir_Cekim_Olum_Dusus")
+        self.assertEqual(bridge.sanitize_filename("Café 🔥 Şarkı"), "Cafe_Sarki")
+
     def test_limits_the_length(self):
         self.assertEqual(len(bridge.sanitize_filename("a" * 300)), 200)
 
