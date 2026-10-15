@@ -1,0 +1,6 @@
+# Python bytecode from running the bridge or its tests
+__pycache__/
+*.pyc
+
+# The add-on package is built by the workflow and attached to each release
+*.fda
