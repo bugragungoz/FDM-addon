@@ -303,7 +303,6 @@ def extract_with_ytdlp(url: str, playlist: bool = False) -> Dict[str, Any]:
         "--no-warnings",
         "--no-progress",
         "--ignore-errors",
-        "--no-check-certificates",
     ]
     
     # For YouTube, request HLS formats which have combined video+audio

@@ -120,6 +120,7 @@ class BridgeProcessTests(unittest.TestCase):
         self.assertEqual(data["original_title"], "Café 🔥 Şarkı")
         self.assertEqual(len(data["formats"]), 4)
         self.assertIn("--no-playlist", self.ytdlp_args())
+        self.assertNotIn("--no-check-certificates", self.ytdlp_args())
 
     def test_titles_outside_the_console_code_page_still_print(self):
         # The emoji in the title has no place in cp1254.
