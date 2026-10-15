@@ -761,6 +761,9 @@ def extract_info(url: str, playlist: bool = False) -> Dict[str, Any]:
 
 
 def main():
+    # Output is plain ASCII JSON: other characters are written as \u escapes, which JSON.parse
+    # reads back, so a title with an emoji prints even when Python's stdout uses a code page
+    # such as cp1254 (the default for a redirected stdout on Windows).
     if len(sys.argv) < 3:
         print(json.dumps({"error": "Usage: croxz_bridge.py <command> <url>"}))
         sys.exit(1)
@@ -770,13 +773,13 @@ def main():
     
     if command == "analyze":
         result = analyze_url(url)
-        print(json.dumps(result, ensure_ascii=False))
+        print(json.dumps(result))
     elif command == "extract":
         result = extract_info(url, playlist=False)
-        print(json.dumps(result, ensure_ascii=False))
+        print(json.dumps(result))
     elif command == "playlist":
         result = extract_info(url, playlist=True)
-        print(json.dumps(result, ensure_ascii=False))
+        print(json.dumps(result))
     elif command == "check":
         is_direct = is_direct_download_url(url)
         has_ytdlp = find_ytdlp() is not None

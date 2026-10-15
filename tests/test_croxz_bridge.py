@@ -121,6 +121,14 @@ class BridgeProcessTests(unittest.TestCase):
         self.assertEqual(len(data["formats"]), 4)
         self.assertIn("--no-playlist", self.ytdlp_args())
 
+    def test_titles_outside_the_console_code_page_still_print(self):
+        # The emoji in the title has no place in cp1254.
+        run = self.run_bridge("extract", "https://www.youtube.com/watch?v=abc123", encoding="cp1254")
+
+        self.assertEqual(run.returncode, 0, run.stderr)
+        data = json.loads(run.stdout.decode("ascii"))
+        self.assertEqual(data["original_title"], "Café 🔥 Şarkı")
+
     def test_playlist_lists_each_entry(self):
         run = self.run_bridge(
             "playlist", "https://www.youtube.com/playlist?list=PL1", fixture="playlist.json")
