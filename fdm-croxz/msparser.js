@@ -1,7 +1,6 @@
 /**
- * Croxz Universal Parser
- * Supports media extraction via yt-dlp and direct file downloads
- * Version: 1.1.0
+ * Croxz media parser: hands media pages and HLS/DASH streams to croxz_bridge.py, which reads
+ * their formats with yt-dlp. Direct file downloads are left to FDM.
  */
 
 var msParser = (function() {

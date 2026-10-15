@@ -1,7 +1,6 @@
 /**
- * Croxz Universal Playlist Parser
- * Supports playlists and batch downloads
- * Version: 1.1.0
+ * Croxz playlist parser: hands playlist, channel and album pages to croxz_bridge.py, which lists
+ * their entries with yt-dlp.
  */
 
 var msBatchVideoParser = (function() {

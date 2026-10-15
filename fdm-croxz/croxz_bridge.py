@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-Croxz Universal Downloader Bridge
-Handles media extraction via yt-dlp and direct file downloads
+Croxz Universal Downloader bridge, run by the add-on's parsers through FDM's launchPythonScript.
+
+    croxz_bridge.py extract <url>    formats of one video, as JSON on stdout
+    croxz_bridge.py playlist <url>   entries of a playlist, as JSON on stdout
+
+Formats come from yt-dlp. Only formats that carry both video and sound are offered, plus the
+best audio-only one, because FDM cannot join a separate video and audio stream.
 """
 
 import sys
