@@ -1,0 +1,16 @@
+{
+  "id": "abc123",
+  "title": "Café 🔥 Şarkı",
+  "webpage_url": "https://www.youtube.com/watch?v=abc123",
+  "duration": 212,
+  "upload_date": "20260301",
+  "formats": [
+    {"format_id": "sb0", "url": "https://i.ytimg.com/sb/abc123/storyboard.mhtml", "ext": "mhtml", "vcodec": "images", "acodec": "none"},
+    {"format_id": "137", "url": "https://rr1.googlevideo.com/137", "ext": "mp4", "vcodec": "avc1.640028", "acodec": "none", "height": 1080, "width": 1920, "fps": 30, "tbr": 4400, "filesize": 110000000},
+    {"format_id": "95", "url": "https://manifest.googlevideo.com/95/index.m3u8", "protocol": "m3u8_native", "ext": "mp4", "vcodec": "avc1.4d401f", "acodec": "mp4a.40.2", "height": 720, "width": 1280, "fps": 30, "tbr": 2600, "filesize_approx": 69000000},
+    {"format_id": "94", "url": "https://manifest.googlevideo.com/94/index.m3u8", "protocol": "m3u8_native", "ext": "mp4", "vcodec": "avc1.4d401e", "acodec": "mp4a.40.2", "height": 480, "width": 854, "fps": 30, "tbr": 1400},
+    {"format_id": "18", "url": "https://rr1.googlevideo.com/18", "ext": "mp4", "vcodec": "avc1.42001E", "acodec": "mp4a.40.2", "height": 360, "width": 640, "fps": 30, "tbr": 500, "filesize": 13000000},
+    {"format_id": "140", "url": "https://rr1.googlevideo.com/140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "abr": 129, "tbr": 129, "filesize": 3400000},
+    {"format_id": "251", "url": "https://rr1.googlevideo.com/251", "ext": "webm", "vcodec": "none", "acodec": "opus", "abr": 160, "tbr": 160, "filesize": 4100000}
+  ]
+}

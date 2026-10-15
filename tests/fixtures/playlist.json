@@ -1,0 +1,4 @@
+[
+  {"_type": "url", "ie_key": "Youtube", "id": "one", "url": "https://www.youtube.com/watch?v=one", "title": "First", "duration": 61, "playlist_title": "Mix"},
+  {"_type": "url", "ie_key": "Youtube", "id": "two", "url": "https://www.youtube.com/watch?v=two", "title": "Second", "duration": 75, "playlist_title": "Mix"}
+]
