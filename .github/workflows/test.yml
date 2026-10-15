@@ -1,4 +1,4 @@
-name: Test
+name: Test and release
 
 on:
   push:
@@ -35,3 +35,38 @@ jobs:
         with:
           node-version: 22
       - run: node --test tests/parsers.test.js
+
+  release:
+    name: Release
+    needs: [python, javascript]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build fdm-croxz.fda and publish it when this version has no release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('fdm-croxz/manifest.json'))['version'])")
+          tag="v$version"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "$tag is already released."
+            exit 0
+          fi
+
+          # The release notes are the version's section of CHANGELOG.md.
+          python3 - "$version" > notes.md <<'PY'
+          import re, sys
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          section = re.search(r"^## " + re.escape(sys.argv[1]) + r"\b.*?\n(.*?)(?=^## |\Z)", text, re.S | re.M)
+          if not section:
+              sys.exit("CHANGELOG.md has no section for " + sys.argv[1])
+          print(section.group(1).strip())
+          PY
+
+          # An .fda file is a zip archive with the add-on's files at its root.
+          (cd fdm-croxz && zip -X -r ../fdm-croxz.fda . -x '__pycache__/*')
+          unzip -l fdm-croxz.fda
+          gh release create "$tag" fdm-croxz.fda --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md
