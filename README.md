@@ -69,12 +69,8 @@ GitHub Actions runs both on every push, the Python tests on 3.8 (the version FDM
 To release, raise `version` in `manifest.json`, add its section to [CHANGELOG.md](CHANGELOG.md) and
 push to `master`: the workflow builds `fdm-croxz.fda` from the `fdm-croxz` folder and publishes it.
 
-[fdm-addons-docs-master](fdm-addons-docs-master/) is a copy of FDM's add-on documentation, the
-reference for the manifest and the parser functions. The GitHub repository it came from no longer
-opens.
-
 ## License
 
-[MIT](LICENSE). The copied FDM documentation is under the MIT License of the FDM Team.
+[MIT](LICENSE)
 
 This add-on was later revised with Claude Opus 5.5.
